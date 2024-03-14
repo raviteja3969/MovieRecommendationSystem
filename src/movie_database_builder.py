@@ -13,7 +13,7 @@ def insert_movie(title, genre, synopsis, rating):
             Item={
                 'title': title,
                 'genre': genre,
-                'synopsis': synopsis,
+                #'synopsis': synopsis,
                 'rating': str(rating)
             },
             ConditionExpression="attribute_not_exists(title)"  # Avoid duplicates

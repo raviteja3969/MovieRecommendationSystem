@@ -1,26 +1,25 @@
-import sqlite3
+import boto3
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
-# Connect to the SQLite database
-conn = sqlite3.connect('movies.db')
-c = conn.cursor()
+# Initialize DynamoDB client
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('movie_database')
 
-# Function to fetch data from the SQLite database
+# Function to fetch data from DynamoDB
 def fetch_data_from_db():
-    c.execute("SELECT * FROM movies")
-    return c.fetchall()
+    response = table.scan()
+    return response['Items']
 
-# Fetch movie data from the database
+# Fetch movie data from DynamoDB
 data = fetch_data_from_db()
 
 # Extract features
-titles = [movie[1] for movie in data]  # Assuming title is in the second column
-genres = [movie[2] for movie in data]  # Assuming genre is in the third column
-synopses = [movie[3] for movie in data]  # Assuming synopsis is in the fourth column
-ratings = [movie[4] for movie in data]  # Assuming rating is in the fifth column
+titles = [movie['title'] for movie in data]
+genres = [movie['genre'] for movie in data]
+#synopses = [movie['synopsis'] for movie in data]
+ratings = [movie['rating'] for movie in data]
 
-print(titles)
 # Vectorize features
 tfidf_vectorizer = TfidfVectorizer()
 tfidf_matrix = tfidf_vectorizer.fit_transform(genres)
@@ -37,11 +36,7 @@ def get_recommendations(title, cosine_sim=cosine_sim):
     movie_indices = [i[0] for i in sim_scores]
     return [titles[i] for i in movie_indices]
 
-# Example usage
-recommendations = get_recommendations("Mortal Kombat Legends: Scorpion's Revenge")
-print("Recommendations for 'Mortal Kombat Legends: Scorpion's Revenge':")
+recommendations = get_recommendations("Baahubali: The Beginning")
+print("Recommendations for 'Baahubali: The Beginning ':")
 for movie in recommendations:
     print("-", movie)
-
-# Close the database connection
-conn.close()
